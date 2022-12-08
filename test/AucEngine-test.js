@@ -9,6 +9,12 @@ describe("AucEngine", function () {
 
     const AucEngine = await ethers.getContractFactory("AucEngine", owner);
     auct = await AucEngine.deploy();
-    await auct.deploy();
+    await auct.deployed();
   });
+
+  it("sets owner", async function(){
+    const currentOwner = await auct.owner();
+    console.log(currentOwner);
+    expect(currentOwner).to.eq(owner.address);
+  })
 });
