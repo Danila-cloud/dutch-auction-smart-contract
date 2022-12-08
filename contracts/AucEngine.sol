@@ -4,16 +4,16 @@ pragma solidity ^0.8.9;
 
 contract AucEngine {
     address public owner; // adress which unfolded contract
-    uint256 constant duration = 2 days; // default auction duration if it wasn't be set
-    uint256 constant fee = 10;
+    uint constant DURATION = 2 days; // default auction duration if it wasn't be set
+    uint constant FEE = 10;
 
     struct Auction {
         address payable seller;
-        uint256 startingPrice;
-        uint256 finalPrice;
-        uint256 startAt;
-        uint256 endsAt;
-        uint256 discountRate;
+        uint startingPrice;
+        uint finalPrice;
+        uint startAt;
+        uint endsAt;
+        uint discountRate;
         string item;
         bool isStoped;
     }
@@ -21,25 +21,25 @@ contract AucEngine {
     Auction[] public auctions; // array with all auctions
 
     event AuctionCreated(
-        uint256 index,
+        uint index,
         string _item,
-        uint256 _startingPrice,
-        uint256 duration
+        uint _startingPrice,
+        uint duration
     );
 
-    event AuctionEnded(uint256 index, uint256 finalPrice, address winner);
+    event AuctionEnded(uint index, uint finalPrice, address winner);
 
     constructor() {
         owner = msg.sender; // owner = adress which unfolder contract
     }
 
     function createAuction(
-        uint256 _startingPrice,
-        uint256 _discountRate,
-        string calldata _item,
-        uint256 _duration
+        uint _startingPrice,
+        uint _discountRate,
+        string memory _item,
+        uint _duration
     ) external {
-        uint256 duration = _duration == 0 ? duration : _duration;
+        uint duration = _duration == 0 ? DURATION : _duration;
 
         require(
             _startingPrice >= _discountRate * duration,
@@ -67,36 +67,36 @@ contract AucEngine {
         );
     }
 
-    function getPriceFor(uint256 index) public view returns (uint256) {
-        Auction storage cAuction = auctions[index];
+    function getPriceFor(uint index) public view returns(uint) {
+        Auction memory cAuction = auctions[index];
 
         require(!cAuction.isStoped, "Auction is already stopped!"); // check if auction not stopped yet
 
-        uint256 elapsed = block.timestamp - cAuction.startAt;
+        uint elapsed = block.timestamp - cAuction.startAt;
 
-        uint256 discount = cAuction.discountRate * elapsed; // total discountRate
+        uint discount = cAuction.discountRate * elapsed; // total discountRate
 
         return cAuction.startingPrice - discount;
     }
 
-    function buy(uint256 index) external payable {
-        Auction memory cAuction = auctions[index];
+    function buy(uint index) external payable {
+        Auction storage cAuction = auctions[index];
 
         require(!cAuction.isStoped, "Auction is already stopped!"); // exeptions
         require(block.timestamp < cAuction.endsAt, "Auctions is ended!");
 
-        uint256 cPrice = getPriceFor(index);
+        uint cPrice = getPriceFor(index);
 
         require(msg.value >= cPrice, "your bid is less than actual price");
         cAuction.isStoped = true;
         cAuction.finalPrice = cPrice;
 
-        uint256 refund = msg.value - cPrice; // calculate if user send value bigger than actual price
+        uint refund = msg.value - cPrice; // calculate if user send value bigger than actual price
         if (refund > 0) {
             payable(msg.sender).transfer(refund); // refund
         }
 
-        cAuction.seller.transfer((cPrice / 100) * 90); // send money to seller
+        cAuction.seller.transfer(cPrice - ((cPrice * FEE) / 100)); // send money to seller
         emit AuctionEnded(index, cPrice, msg.sender);
     }
 }
