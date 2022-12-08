@@ -27,7 +27,7 @@ contract AucEngine {
         uint256 duration
     );
 
-event AuctionEnded(uint index, uint finalPrice, address winner);
+    event AuctionEnded(uint256 index, uint256 finalPrice, address winner);
 
     constructor() {
         owner = msg.sender; // owner = adress which unfolder contract
@@ -68,13 +68,13 @@ event AuctionEnded(uint index, uint finalPrice, address winner);
     }
 
     function getPriceFor(uint256 index) public view returns (uint256) {
-        Auction memory cAuction = auctions[index];
+        Auction storage cAuction = auctions[index];
 
-        require(!cAuction.isStoped, "Auction is already stopped!");  // check if auction not stopped yet
+        require(!cAuction.isStoped, "Auction is already stopped!"); // check if auction not stopped yet
 
         uint256 elapsed = block.timestamp - cAuction.startAt;
 
-        uint256 discount = cAuction.discountRate * elapsed;  // total discountRate
+        uint256 discount = cAuction.discountRate * elapsed; // total discountRate
 
         return cAuction.startingPrice - discount;
     }
@@ -82,21 +82,21 @@ event AuctionEnded(uint index, uint finalPrice, address winner);
     function buy(uint256 index) external payable {
         Auction memory cAuction = auctions[index];
 
-        require(!cAuction.isStoped, "Auction is already stopped!");  // exeptions
+        require(!cAuction.isStoped, "Auction is already stopped!"); // exeptions
         require(block.timestamp < cAuction.endsAt, "Auctions is ended!");
 
-        uint cPrice = getPriceFor(index);
+        uint256 cPrice = getPriceFor(index);
 
         require(msg.value >= cPrice, "your bid is less than actual price");
         cAuction.isStoped = true;
         cAuction.finalPrice = cPrice;
 
-        uint refund = msg.value - cPrice;  // calculate if user send value bigger than actual price
-        if(refund > 0){
-            payable(msg.sender).transfer(refund);  // refund
+        uint256 refund = msg.value - cPrice; // calculate if user send value bigger than actual price
+        if (refund > 0) {
+            payable(msg.sender).transfer(refund); // refund
         }
 
-        cAuction.seller.transfer(cPrice / 100 * 90);  // send money to seller
+        cAuction.seller.transfer((cPrice / 100) * 90); // send money to seller
         emit AuctionEnded(index, cPrice, msg.sender);
     }
 }
