@@ -46,7 +46,7 @@ describe("AucEngine", function () {
   });
 
   function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   describe("buy", function () {
@@ -66,7 +66,16 @@ describe("AucEngine", function () {
       const finalPrice = cAuction.finalPrice;
       await expect(() => buyTx).to.changeEtherBalance(
         seller,
-        (finalPrice - Math.floor((finalPrice * 10) / 100)));
+        finalPrice - Math.floor((finalPrice * 10) / 100)
+      );
+
+      await expect(buyTx)
+        .to.emit(auct, "AuctionEnded")
+        .withArgs(0, finalPrice, buyer.address);
+
+      await expect(
+        auct.connect(buyer).buy(0, { value: ethers.utils.parseEther("0.0001") })
+      ).to.be.revertedWith("Auction is already stopped!");
     });
   });
 });
