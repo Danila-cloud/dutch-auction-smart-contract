@@ -78,4 +78,12 @@ describe("AucEngine", function () {
       ).to.be.revertedWith("Auction is already stopped!");
     });
   });
+
+  describe("withdraw", function () {
+    it("buyer", async function () {
+      await expect(auct.connect(buyer).withdraw()).to.be.revertedWith(
+        "You don't have permissions for it"
+      );
+    });
+  });
 });

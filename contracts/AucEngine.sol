@@ -67,6 +67,11 @@ contract AucEngine {
         );
     }
 
+    function withdraw() external {
+        require(msg.sender == owner, "You don't have permissions for it");
+        payable(owner).transfer(address(this).balance);
+    }
+
     function getPriceFor(uint256 index) public view returns (uint256) {
         Auction memory cAuction = auctions[index];
 
