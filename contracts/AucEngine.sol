@@ -67,8 +67,12 @@ contract AucEngine {
         );
     }
 
-    function withdraw() external {
+    modifier onlyOwner() {
         require(msg.sender == owner, "You don't have permissions for it");
+        _;
+    }
+
+    function withdraw() external onlyOwner{
         payable(owner).transfer(address(this).balance);
     }
 
